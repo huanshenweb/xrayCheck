@@ -1,15 +1,28 @@
 # X-Ray 流量监控工具 - 完整使用文档
 
+> **🚀 一键安装命令：**
+> ```bash
+> bash <(curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh)
+> ```
+
+---
+
 ## 📚 目录
 
 - [工具介绍](#工具介绍)
 - [版本选择](#版本选择)
 - [安装指南](#安装指南)
+  - [一键安装（推荐）](#一键安装推荐)
+  - [完整安装流程](#完整安装流程数据库版)
+  - [手动安装（简单版）](#手动安装简单版)
+  - [安装时的常见选项](#安装时的常见选项)
+  - [重新安装或更新](#重新安装或更新)
 - [使用教程](#使用教程)
 - [命令参考](#命令参考)
 - [常见问题](#常见问题)
 - [最佳实践](#最佳实践)
 - [故障排查](#故障排查)
+- [总结](#总结)
 
 ---
 
@@ -76,10 +89,190 @@ X-Ray 流量监控工具是一个用于监控 X-Ray 代理服务器流量的 She
 2. X-Ray 已安装并运行
 3. 互联网连接（用于安装依赖）
 
-### 简单版安装
+---
+
+### 🚀 一键安装（推荐）⭐
+
+数据库版支持一键安装，无需手动下载脚本：
+
+#### 方法1：使用 curl（推荐）
 
 ```bash
-# 1. 上传脚本到服务器
+bash <(curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh)
+```
+
+#### 方法2：使用 wget
+
+```bash
+wget -qO- https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh | bash
+```
+
+#### 方法3：下载后执行
+
+```bash
+# 下载脚本
+curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh -o xray-monitor-install.sh
+
+# 赋予执行权限
+chmod +x xray-monitor-install.sh
+
+# 执行安装
+bash xray-monitor-install.sh
+```
+
+---
+
+### 📋 完整安装流程（数据库版）
+
+#### 步骤1：一键安装
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh)
+```
+
+**安装过程中会：**
+- ✅ 自动检测系统类型（Ubuntu/Debian/CentOS）
+- ✅ 自动检测 X-Ray 端口
+- ✅ 智能识别公网端口，忽略本地端口
+- ✅ 自动安装依赖包（iptables, iproute2, gawk, sqlite3, bc）
+- ✅ 创建 `xray-monitor` 命令
+- ✅ 创建数据库目录和文件
+
+**端口检测示例：**
+```
+正在检测 X-Ray 端口...
+✓ 自动检测到公网端口: 48056 (*:48056)
+  已忽略 2 个本地端口
+✓ 将监控端口: 48056
+```
+
+如果检测到多个公网端口，会提示选择：
+```
+检测到 3 个公网端口:
+  [1] 端口 443 (监听: 0.0.0.0:443)
+  [2] 端口 8443 (监听: *:8443)
+  [3] 端口 48056 (监听: *:48056)
+请选择要监控的端口序号 [1-3]:
+```
+
+#### 步骤2：测试连接（重要！）
+
+安装完成后，务必运行测试命令验证功能：
+
+```bash
+xray-monitor test
+```
+
+**期望输出：**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  连接测试 (端口: 48056)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+总连接数: 260
+
+原始连接数据（前5行）:
+Recv-Q Send-Q Local Address:Port    Peer Address:Port
+0      0      [::ffff:x.x.x.x]:48056 [::ffff:1.2.3.4]:12345
+...
+
+提取的IP地址（前10个）:
+  • 1.2.3.4
+  • 5.6.7.8
+  • 9.10.11.12
+  ...
+
+唯一IP数: 45  ← 应该显示正确的数字，不是0
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+⚠️ **如果显示"唯一IP数: 0"，说明有问题，请查看[故障排查](#故障排查)章节！**
+
+#### 步骤3：启动监控服务
+
+```bash
+xray-monitor start
+```
+
+**输出：**
+```
+✓ 监控服务已启动 (PID: 12345)
+  采集间隔: 5分钟
+  数据库: /var/lib/xray-monitor/traffic.db
+  日志: /var/log/xray-monitor.log
+```
+
+服务启动后会自动每5分钟采集一次流量数据。
+
+#### 步骤4：查看服务状态
+
+```bash
+xray-monitor status
+```
+
+**输出示例：**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  监控服务状态
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+状态: 运行中
+PID: 12345
+端口: 48056
+采集间隔: 5分钟
+数据记录: 0 条  ← 刚启动时为0
+唯一IP: 0 个
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+#### 步骤5：实时监控（可选）
+
+在等待数据采集期间，可以查看实时连接状态：
+
+```bash
+xray-monitor realtime
+```
+
+按 `Ctrl+C` 退出。
+
+#### 步骤6：查询流量数据
+
+**⏰ 重要：等待5-10分钟后再查询！**
+
+首次采集在启动后约5分钟完成。
+
+```bash
+# 查询最近10分钟
+xray-monitor query 10
+
+# 或查询最近1小时（显示前20名）
+xray-monitor query 60 20
+```
+
+**成功输出示例：**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  流量统计 - 最近 10 分钟 (Top 10)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1   1.2.3.4          125.45 MB     234.67 MB     360.12 MB
+2   5.6.7.8           89.23 MB     156.78 MB     246.01 MB
+...
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+总流量: 3580.23 MB (3.50 GB)  |  唯一IP: 45
+```
+
+如果显示空数据（总流量0），说明：
+1. 时间还不够（继续等待）
+2. 查询时间范围不对（尝试 `xray-monitor query 15`）
+3. 服务未正常工作（查看 `xray-monitor status`）
+
+---
+
+### 📦 手动安装（简单版）
+
+如果只需要临时监控，不需要数据持久化：
+
+```bash
+# 1. 下载脚本
+curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-simple.sh -o xray-monitor-install-simple.sh
 
 # 2. 赋予执行权限
 chmod +x xray-monitor-install-simple.sh
@@ -87,43 +280,96 @@ chmod +x xray-monitor-install-simple.sh
 # 3. 运行安装
 bash xray-monitor-install-simple.sh
 
-# 4. 安装完成，立即可用
-xray-monitor help
+# 4. 立即使用
+xray-monitor status
+xray-monitor 300  # 监控5分钟
 ```
 
-**安装过程：**
-- 自动检测系统类型
-- 自动检测 X-Ray 端口（优先选择公网端口）
-- 安装必要依赖（iptables, iproute2, gawk）
-- 创建 `xray-monitor` 命令
+**简单版特点：**
+- ✅ 无需数据库
+- ✅ 即用即走
+- ❌ 数据不保存
+- ❌ 无法查询历史
 
-### 数据库版安装
+---
+
+### ⚙️ 安装时的常见选项
+
+#### 1. 多个端口时的选择
+
+如果系统有多个X-Ray端口：
+
+```
+检测到 3 个公网端口:
+  [1] 端口 443 (监听: 0.0.0.0:443)
+  [2] 端口 8443 (监听: *:8443)
+  [3] 端口 48056 (监听: *:48056)
+  已忽略 2 个本地端口
+
+请选择要监控的端口序号 [1-3]: 3
+✓ 已选择端口: 48056
+```
+
+**选择建议：** 选择你实际提供给用户使用的端口。
+
+#### 2. 手动指定端口
+
+如果自动检测失败：
+
+```
+未自动检测到 X-Ray 端口，请手动输入:
+请输入 X-Ray 监听端口 (默认 32252): 48056
+✓ 将监控端口: 48056
+```
+
+#### 3. 查看已安装版本
 
 ```bash
-# 1. 上传脚本到服务器
-
-# 2. 赋予执行权限
-chmod +x xray-monitor-install-db.sh
-
-# 3. 运行安装
-bash xray-monitor-install-db.sh
-
-# 4. 测试连接（重要！）
-xray-monitor test
-
-# 5. 启动服务
-xray-monitor start
-
-# 6. 查看服务状态
-xray-monitor status
+xray-monitor help | head -3
 ```
 
-**安装过程：**
-- 自动检测系统类型
-- 自动检测 X-Ray 端口（智能识别公网/本地端口）
-- 安装必要依赖（iptables, iproute2, gawk, sqlite3, bc）
-- 创建 `xray-monitor` 命令
-- 创建数据库目录和文件
+应该显示：
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  X-Ray 流量监控工具 v2.3 - 数据库版
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+### 🔄 重新安装或更新
+
+如果需要重新安装（例如更新到新版本）：
+
+```bash
+# 1. 停止服务（保留数据）
+xray-monitor stop
+
+# 2. 重新运行安装脚本
+bash <(curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh)
+
+# 3. 测试
+xray-monitor test
+
+# 4. 启动服务
+xray-monitor start
+```
+
+**注意：** 重新安装**不会删除**数据库，历史数据会保留！
+
+---
+
+### ✅ 安装成功检查清单
+
+安装完成后，确认以下几点：
+
+- [ ] 运行 `xray-monitor test` 能正确显示IP（不是0）
+- [ ] 运行 `xray-monitor start` 服务启动成功
+- [ ] 运行 `xray-monitor status` 显示"运行中"
+- [ ] 运行 `xray-monitor realtime` 能看到实时连接
+- [ ] 等待5-10分钟后 `xray-monitor query 10` 有数据
+
+如果以上任何一项失败，请查看[故障排查](#故障排查)章节。
 
 ---
 
@@ -807,31 +1053,51 @@ ss -tn state established "( dport = :48056 or sport = :48056 )" | \
 
 ## 总结
 
-### 快速开始（数据库版）⭐ 推荐
+### 🚀 快速开始（数据库版）⭐ 推荐
+
+#### 一键安装命令
 
 ```bash
-# 1. 安装
-bash xray-monitor-install-db.sh
+bash <(curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh)
+```
 
-# 2. 测试
+#### 完整流程
+
+```bash
+# 1. 一键安装
+bash <(curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh)
+
+# 2. 测试连接
 xray-monitor test
 
-# 3. 启动
+# 3. 启动服务
 xray-monitor start
 
-# 4. 查询（等待5-10分钟）
-xray-monitor query 60 10
+# 4. 查看状态
+xray-monitor status
+
+# 5. 查询流量（等待5-10分钟）
+xray-monitor query 10
 ```
 
 ### 快速开始（简单版）
 
 ```bash
-# 1. 安装
-bash xray-monitor-install-simple.sh
+# 1. 下载安装
+curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-simple.sh | bash
 
 # 2. 监控5分钟
 xray-monitor 300
 ```
+
+---
+
+### 📖 相关链接
+
+- **GitHub 仓库**: https://github.com/huanshenweb/xrayCheck
+- **安装脚本**: https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh
+
+---
 
 **祝使用愉快！** 🚀
 
