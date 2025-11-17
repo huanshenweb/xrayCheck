@@ -1,6 +1,7 @@
 # X-Ray 流量监控工具 - 完整使用文档
 
 > **🚀 一键安装命令：**
+>
 > ```bash
 > bash <(curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh)
 > ```
@@ -52,27 +53,29 @@ X-Ray 流量监控工具是一个用于监控 X-Ray 代理服务器流量的 She
 
 ### 两个版本对比
 
-| 功能 | 简单版 | 数据库版 |
-|------|--------|----------|
-| **文件名** | `xray-monitor-install-simple.sh` | `xray-monitor-install-db.sh` |
-| **数据存储** | ❌ 不保存 | ✅ SQLite数据库 |
-| **历史查询** | ❌ | ✅ 任意时间段 |
-| **自动采集** | ❌ 手动触发 | ✅ 每5分钟 |
-| **后台服务** | ❌ | ✅ 守护进程 |
-| **端口检测** | ✅ | ✅ |
-| **实时监控** | ✅ | ✅ |
-| **资源占用** | 极低 | 低 |
-| **适用场景** | 临时查看 | 长期监控 |
+| 功能         | 简单版                           | 数据库版                     |
+| ------------ | -------------------------------- | ---------------------------- |
+| **文件名**   | `xray-monitor-install-simple.sh` | `xray-monitor-install-db.sh` |
+| **数据存储** | ❌ 不保存                         | ✅ SQLite数据库               |
+| **历史查询** | ❌                                | ✅ 任意时间段                 |
+| **自动采集** | ❌ 手动触发                       | ✅ 每5分钟                    |
+| **后台服务** | ❌                                | ✅ 守护进程                   |
+| **端口检测** | ✅                                | ✅                            |
+| **实时监控** | ✅                                | ✅                            |
+| **资源占用** | 极低                             | 低                           |
+| **适用场景** | 临时查看                         | 长期监控                     |
 
 ### 如何选择？
 
 #### 选择简单版，如果你：
+
 - ✅ 只需要临时查看流量
 - ✅ 不需要保存历史数据
 - ✅ 偶尔使用一次
 - ✅ 服务器资源紧张
 
 #### 选择数据库版，如果你：⭐ 推荐
+
 - ✅ 需要长期监控流量
 - ✅ 需要查询历史数据
 - ✅ 需要流量趋势分析
@@ -131,6 +134,7 @@ bash <(curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/hea
 ```
 
 **安装过程中会：**
+
 - ✅ 自动检测系统类型（Ubuntu/Debian/CentOS）
 - ✅ 自动检测 X-Ray 端口
 - ✅ 智能识别公网端口，忽略本地端口
@@ -139,6 +143,7 @@ bash <(curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/hea
 - ✅ 创建数据库目录和文件
 
 **端口检测示例：**
+
 ```
 正在检测 X-Ray 端口...
 ✓ 自动检测到公网端口: 48056 (*:48056)
@@ -147,6 +152,7 @@ bash <(curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/hea
 ```
 
 如果检测到多个公网端口，会提示选择：
+
 ```
 检测到 3 个公网端口:
   [1] 端口 443 (监听: 0.0.0.0:443)
@@ -164,6 +170,7 @@ xray-monitor test
 ```
 
 **期望输出：**
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   连接测试 (端口: 48056)
@@ -194,6 +201,7 @@ xray-monitor start
 ```
 
 **输出：**
+
 ```
 ✓ 监控服务已启动 (PID: 12345)
   采集间隔: 5分钟
@@ -210,6 +218,7 @@ xray-monitor status
 ```
 
 **输出示例：**
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   监控服务状态
@@ -248,6 +257,7 @@ xray-monitor query 60 20
 ```
 
 **成功输出示例：**
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   流量统计 - 最近 10 分钟 (Top 10)
@@ -260,6 +270,7 @@ xray-monitor query 60 20
 ```
 
 如果显示空数据（总流量0），说明：
+
 1. 时间还不够（继续等待）
 2. 查询时间范围不对（尝试 `xray-monitor query 15`）
 3. 服务未正常工作（查看 `xray-monitor status`）
@@ -286,6 +297,7 @@ xray-monitor 300  # 监控5分钟
 ```
 
 **简单版特点：**
+
 - ✅ 无需数据库
 - ✅ 即用即走
 - ❌ 数据不保存
@@ -329,6 +341,7 @@ xray-monitor help | head -3
 ```
 
 应该显示：
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   X-Ray 流量监控工具 v2.3 - 数据库版
@@ -384,6 +397,7 @@ xray-monitor status
 ```
 
 **输出示例：**
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   当前连接状态 (端口: 48056)
@@ -400,6 +414,7 @@ xray-monitor top 10
 ```
 
 **输出示例：**
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   连接数最多的 10 个IP
@@ -419,6 +434,7 @@ xray-monitor 300
 ```
 
 **输出示例：**
+
 ```
 开始监控端口 48056 的流量...
 ✓ 发现 45 个唯一IP
@@ -464,6 +480,7 @@ xray-monitor start
 ```
 
 **输出：**
+
 ```
 ✓ 监控服务已启动 (PID: 12345)
   采集间隔: 5分钟
@@ -480,6 +497,7 @@ xray-monitor status
 ```
 
 **输出示例：**
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   监控服务状态
@@ -502,6 +520,7 @@ xray-monitor test
 ```
 
 **输出示例：**
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   连接测试 (端口: 48056)
@@ -538,6 +557,7 @@ xray-monitor query 1440 20
 ```
 
 **输出示例：**
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   流量统计 - 最近 60 分钟 (Top 10)
@@ -553,17 +573,17 @@ xray-monitor query 1440 20
 
 ##### 常用查询时长
 
-| 时间段 | 分钟数 | 命令 |
-|--------|--------|------|
-| 10分钟 | 10 | `xray-monitor query 10` |
-| 30分钟 | 30 | `xray-monitor query 30` |
-| 1小时 | 60 | `xray-monitor query 60` |
-| 6小时 | 360 | `xray-monitor query 360` |
-| 12小时 | 720 | `xray-monitor query 720` |
-| 24小时 | 1440 | `xray-monitor query 1440` |
-| 48小时 | 2880 | `xray-monitor query 2880` |
-| 7天 | 10080 | `xray-monitor query 10080` |
-| 30天 | 43200 | `xray-monitor query 43200` |
+| 时间段 | 分钟数 | 命令                       |
+| ------ | ------ | -------------------------- |
+| 10分钟 | 10     | `xray-monitor query 10`    |
+| 30分钟 | 30     | `xray-monitor query 30`    |
+| 1小时  | 60     | `xray-monitor query 60`    |
+| 6小时  | 360    | `xray-monitor query 360`   |
+| 12小时 | 720    | `xray-monitor query 720`   |
+| 24小时 | 1440   | `xray-monitor query 1440`  |
+| 48小时 | 2880   | `xray-monitor query 2880`  |
+| 7天    | 10080  | `xray-monitor query 10080` |
+| 30天   | 43200  | `xray-monitor query 43200` |
 
 #### 5. 实时监控
 
@@ -572,6 +592,7 @@ xray-monitor realtime
 ```
 
 **功能：**
+
 - 每3秒刷新一次
 - 显示当前总连接数
 - 显示唯一IP数
@@ -579,6 +600,7 @@ xray-monitor realtime
 - 按 `Ctrl+C` 退出
 
 **输出示例：**
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   实时连接状态 (端口: 48056)
@@ -621,33 +643,33 @@ xray-monitor cleardb
 
 ### 简单版命令
 
-| 命令 | 说明 | 示例 |
-|------|------|------|
-| `xray-monitor status` | 查看当前连接状态 | - |
-| `xray-monitor top [N]` | 显示连接数最多的N个IP | `xray-monitor top 20` |
-| `xray-monitor monitor <秒>` | 监控指定时长的流量 | `xray-monitor monitor 300` |
-| `xray-monitor <秒>` | 快捷监控（同monitor） | `xray-monitor 300` |
-| `xray-monitor help` | 显示帮助信息 | - |
+| 命令                        | 说明                  | 示例                       |
+| --------------------------- | --------------------- | -------------------------- |
+| `xray-monitor status`       | 查看当前连接状态      | -                          |
+| `xray-monitor top [N]`      | 显示连接数最多的N个IP | `xray-monitor top 20`      |
+| `xray-monitor monitor <秒>` | 监控指定时长的流量    | `xray-monitor monitor 300` |
+| `xray-monitor <秒>`         | 快捷监控（同monitor） | `xray-monitor 300`         |
+| `xray-monitor help`         | 显示帮助信息          | -                          |
 
 ### 数据库版命令
 
-| 命令 | 说明 | 示例 |
-|------|------|------|
-| **服务管理** |
-| `xray-monitor start` | 启动后台监控服务 | - |
-| `xray-monitor stop` | 停止监控服务 | - |
-| `xray-monitor restart` | 重启监控服务 | - |
-| `xray-monitor status` | 查看服务状态 | - |
-| **流量查询** |
+| 命令                                | 说明               | 示例                       |
+| ----------------------------------- | ------------------ | -------------------------- |
+| **服务管理**                        |                    |                            |
+| `xray-monitor start`                | 启动后台监控服务   | -                          |
+| `xray-monitor stop`                 | 停止监控服务       | -                          |
+| `xray-monitor restart`              | 重启监控服务       | -                          |
+| `xray-monitor status`               | 查看服务状态       | -                          |
+| **流量查询**                        |                    |                            |
 | `xray-monitor query <分钟> [Top N]` | 查询指定时间段流量 | `xray-monitor query 60 10` |
-| **实时监控** |
-| `xray-monitor realtime` | 实时显示连接状态 | - |
-| **数据管理** |
-| `xray-monitor cleardb` | 清空数据库 | - |
-| **调试工具** |
-| `xray-monitor test` | 测试连接检测 | - |
-| **其他** |
-| `xray-monitor help` | 显示帮助信息 | - |
+| **实时监控**                        |                    |                            |
+| `xray-monitor realtime`             | 实时显示连接状态   | -                          |
+| **数据管理**                        |                    |                            |
+| `xray-monitor cleardb`              | 清空数据库         | -                          |
+| **调试工具**                        |                    |                            |
+| `xray-monitor test`                 | 测试连接检测       | -                          |
+| **其他**                            |                    |                            |
+| `xray-monitor help`                 | 显示帮助信息       | -                          |
 
 ---
 
@@ -658,6 +680,7 @@ xray-monitor cleardb
 **原因：** 脚本版本太旧或IP提取逻辑有问题。
 
 **解决方法：**
+
 ```bash
 # 1. 确认使用最新版本
 xray-monitor help | head -3
@@ -676,6 +699,7 @@ xray-monitor test
 **原因：** 服务刚启动，还没有采集数据。
 
 **解决方法：**
+
 ```bash
 # 1. 确认服务已启动
 xray-monitor status
@@ -692,6 +716,7 @@ tail -50 /var/log/xray-monitor.log
 **原因：** X-Ray 未运行或使用非标准端口。
 
 **解决方法：**
+
 ```bash
 # 1. 确认 X-Ray 正在运行
 systemctl status xray
@@ -797,18 +822,21 @@ cp /var/lib/xray-monitor/traffic.db ~/backup/traffic-$(date +%Y%m%d).db
 ### 2. 监控策略建议
 
 #### 日常监控
+
 ```bash
 # 每天查看一次最近24小时的流量
 xray-monitor query 1440 20
 ```
 
 #### 实时观察
+
 ```bash
 # 发现异常时使用实时监控
 xray-monitor realtime
 ```
 
 #### 定期审计
+
 ```bash
 # 每周查看最近7天的流量
 xray-monitor query 10080 50
@@ -834,6 +862,7 @@ iptables -A INPUT -s <异常IP> -j DROP
 ### 1. 服务无法启动
 
 **检查步骤：**
+
 ```bash
 # 1. 查看是否已在运行
 xray-monitor status
@@ -852,6 +881,7 @@ xray-monitor start
 ### 2. 数据库损坏
 
 **修复方法：**
+
 ```bash
 # 1. 备份数据库
 cp /var/lib/xray-monitor/traffic.db /var/lib/xray-monitor/traffic.db.bak
@@ -868,6 +898,7 @@ xray-monitor start
 ### 3. IP提取失败
 
 **诊断方法：**
+
 ```bash
 # 1. 运行测试
 xray-monitor test
@@ -936,17 +967,20 @@ rm -f /var/run/xray-monitor.pid
 ### 工作原理
 
 #### 流量采集
+
 1. 使用 `ss` 命令获取活跃连接的IP列表
 2. 使用 `iptables` 为每个IP创建流量统计规则
 3. 等待指定时间后读取 `iptables` 统计数据
 4. 计算每个IP的入站/出站/总流量
 
 #### 数据存储（数据库版）
+
 - 使用 SQLite3 轻量级数据库
 - 表结构：`ip_address`, `bytes_in`, `bytes_out`, `bytes_total`, `timestamp`
 - 索引：IP地址、时间戳、IP+时间组合
 
 #### 智能端口检测
+
 - 扫描所有 xray 进程监听的端口
 - 自动识别公网端口（监听 `0.0.0.0` 或 `*`）
 - 忽略本地端口（监听 `127.0.0.1`）
@@ -962,38 +996,43 @@ rm -f /var/run/xray-monitor.pid
 
 ### 文件位置
 
-| 文件 | 位置 | 说明 |
-|------|------|------|
-| 主脚本 | `/usr/local/bin/xray-monitor` | 可执行命令 |
-| 卸载脚本 | `/usr/local/bin/xray-monitor-uninstall` | 卸载工具（数据库版） |
-| 数据库 | `/var/lib/xray-monitor/traffic.db` | SQLite数据库（数据库版） |
-| 日志 | `/var/log/xray-monitor.log` | 服务日志（数据库版） |
-| PID文件 | `/var/run/xray-monitor.pid` | 进程ID（数据库版） |
+| 文件     | 位置                                    | 说明                     |
+| -------- | --------------------------------------- | ------------------------ |
+| 主脚本   | `/usr/local/bin/xray-monitor`           | 可执行命令               |
+| 卸载脚本 | `/usr/local/bin/xray-monitor-uninstall` | 卸载工具（数据库版）     |
+| 数据库   | `/var/lib/xray-monitor/traffic.db`      | SQLite数据库（数据库版） |
+| 日志     | `/var/log/xray-monitor.log`             | 服务日志（数据库版）     |
+| PID文件  | `/var/run/xray-monitor.pid`             | 进程ID（数据库版）       |
 
 ---
 
 ## 更新日志
 
 ### v2.3 (2025-11-17) - 当前版本
+
 - ✅ 修复列号错误（对端IP在第4列）
 - ✅ 完善IPv6映射格式支持
 - ✅ 优化IP提取逻辑
 - ✅ 首个完全可用的版本
 
 ### v2.2 (2025-11-17)
+
 - ⚠️ 尝试支持IPv6映射格式（列号错误）
 - ✅ 使用 sed 处理 `[::ffff:x.x.x.x]:port` 格式
 
 ### v2.1 (2025-11-17)
+
 - ⚠️ 新增 test 命令
 - ⚠️ 尝试优化IP提取（失败）
 
 ### v2.0 (2025-11-17)
+
 - ✅ 首个数据库版本
 - ✅ 自动采集功能
 - ⚠️ IP提取存在问题
 
 ### v1.0 (简单版)
+
 - ✅ 基础流量监控功能
 - ✅ 实时连接状态
 - ✅ 流量排名
