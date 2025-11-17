@@ -1,0 +1,1103 @@
+# X-Ray 流量监控工具 - 完整使用文档
+
+> **🚀 一键安装命令：**
+> ```bash
+> bash <(curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh)
+> ```
+
+---
+
+## 📚 目录
+
+- [工具介绍](#工具介绍)
+- [版本选择](#版本选择)
+- [安装指南](#安装指南)
+  - [一键安装（推荐）](#一键安装推荐)
+  - [完整安装流程](#完整安装流程数据库版)
+  - [手动安装（简单版）](#手动安装简单版)
+  - [安装时的常见选项](#安装时的常见选项)
+  - [重新安装或更新](#重新安装或更新)
+- [使用教程](#使用教程)
+- [命令参考](#命令参考)
+- [常见问题](#常见问题)
+- [最佳实践](#最佳实践)
+- [故障排查](#故障排查)
+- [总结](#总结)
+
+---
+
+## 工具介绍
+
+X-Ray 流量监控工具是一个用于监控 X-Ray 代理服务器流量的 Shell 脚本工具，可以统计每个IP的流量使用情况。
+
+### 主要功能
+
+- ✅ 自动检测 X-Ray 端口（智能识别公网端口）
+- ✅ 监控IP流量（入站/出站/总计）
+- ✅ 实时连接状态显示
+- ✅ 流量排名统计
+- ✅ 数据持久化存储（数据库版）
+- ✅ 灵活的历史查询（数据库版）
+
+### 适用系统
+
+- Ubuntu 18.04+
+- Debian 9+
+- CentOS 7+
+- 其他主流Linux发行版
+
+---
+
+## 版本选择
+
+### 两个版本对比
+
+| 功能 | 简单版 | 数据库版 |
+|------|--------|----------|
+| **文件名** | `xray-monitor-install-simple.sh` | `xray-monitor-install-db.sh` |
+| **数据存储** | ❌ 不保存 | ✅ SQLite数据库 |
+| **历史查询** | ❌ | ✅ 任意时间段 |
+| **自动采集** | ❌ 手动触发 | ✅ 每5分钟 |
+| **后台服务** | ❌ | ✅ 守护进程 |
+| **端口检测** | ✅ | ✅ |
+| **实时监控** | ✅ | ✅ |
+| **资源占用** | 极低 | 低 |
+| **适用场景** | 临时查看 | 长期监控 |
+
+### 如何选择？
+
+#### 选择简单版，如果你：
+- ✅ 只需要临时查看流量
+- ✅ 不需要保存历史数据
+- ✅ 偶尔使用一次
+- ✅ 服务器资源紧张
+
+#### 选择数据库版，如果你：⭐ 推荐
+- ✅ 需要长期监控流量
+- ✅ 需要查询历史数据
+- ✅ 需要流量趋势分析
+- ✅ 需要定期生成报表
+- ✅ 需要追溯异常流量
+
+---
+
+## 安装指南
+
+### 前置要求
+
+1. Root 权限
+2. X-Ray 已安装并运行
+3. 互联网连接（用于安装依赖）
+
+---
+
+### 🚀 一键安装（推荐）⭐
+
+数据库版支持一键安装，无需手动下载脚本：
+
+#### 方法1：使用 curl（推荐）
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh)
+```
+
+#### 方法2：使用 wget
+
+```bash
+wget -qO- https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh | bash
+```
+
+#### 方法3：下载后执行
+
+```bash
+# 下载脚本
+curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh -o xray-monitor-install.sh
+
+# 赋予执行权限
+chmod +x xray-monitor-install.sh
+
+# 执行安装
+bash xray-monitor-install.sh
+```
+
+---
+
+### 📋 完整安装流程（数据库版）
+
+#### 步骤1：一键安装
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh)
+```
+
+**安装过程中会：**
+- ✅ 自动检测系统类型（Ubuntu/Debian/CentOS）
+- ✅ 自动检测 X-Ray 端口
+- ✅ 智能识别公网端口，忽略本地端口
+- ✅ 自动安装依赖包（iptables, iproute2, gawk, sqlite3, bc）
+- ✅ 创建 `xray-monitor` 命令
+- ✅ 创建数据库目录和文件
+
+**端口检测示例：**
+```
+正在检测 X-Ray 端口...
+✓ 自动检测到公网端口: 48056 (*:48056)
+  已忽略 2 个本地端口
+✓ 将监控端口: 48056
+```
+
+如果检测到多个公网端口，会提示选择：
+```
+检测到 3 个公网端口:
+  [1] 端口 443 (监听: 0.0.0.0:443)
+  [2] 端口 8443 (监听: *:8443)
+  [3] 端口 48056 (监听: *:48056)
+请选择要监控的端口序号 [1-3]:
+```
+
+#### 步骤2：测试连接（重要！）
+
+安装完成后，务必运行测试命令验证功能：
+
+```bash
+xray-monitor test
+```
+
+**期望输出：**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  连接测试 (端口: 48056)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+总连接数: 260
+
+原始连接数据（前5行）:
+Recv-Q Send-Q Local Address:Port    Peer Address:Port
+0      0      [::ffff:x.x.x.x]:48056 [::ffff:1.2.3.4]:12345
+...
+
+提取的IP地址（前10个）:
+  • 1.2.3.4
+  • 5.6.7.8
+  • 9.10.11.12
+  ...
+
+唯一IP数: 45  ← 应该显示正确的数字，不是0
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+⚠️ **如果显示"唯一IP数: 0"，说明有问题，请查看[故障排查](#故障排查)章节！**
+
+#### 步骤3：启动监控服务
+
+```bash
+xray-monitor start
+```
+
+**输出：**
+```
+✓ 监控服务已启动 (PID: 12345)
+  采集间隔: 5分钟
+  数据库: /var/lib/xray-monitor/traffic.db
+  日志: /var/log/xray-monitor.log
+```
+
+服务启动后会自动每5分钟采集一次流量数据。
+
+#### 步骤4：查看服务状态
+
+```bash
+xray-monitor status
+```
+
+**输出示例：**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  监控服务状态
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+状态: 运行中
+PID: 12345
+端口: 48056
+采集间隔: 5分钟
+数据记录: 0 条  ← 刚启动时为0
+唯一IP: 0 个
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+#### 步骤5：实时监控（可选）
+
+在等待数据采集期间，可以查看实时连接状态：
+
+```bash
+xray-monitor realtime
+```
+
+按 `Ctrl+C` 退出。
+
+#### 步骤6：查询流量数据
+
+**⏰ 重要：等待5-10分钟后再查询！**
+
+首次采集在启动后约5分钟完成。
+
+```bash
+# 查询最近10分钟
+xray-monitor query 10
+
+# 或查询最近1小时（显示前20名）
+xray-monitor query 60 20
+```
+
+**成功输出示例：**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  流量统计 - 最近 10 分钟 (Top 10)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1   1.2.3.4          125.45 MB     234.67 MB     360.12 MB
+2   5.6.7.8           89.23 MB     156.78 MB     246.01 MB
+...
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+总流量: 3580.23 MB (3.50 GB)  |  唯一IP: 45
+```
+
+如果显示空数据（总流量0），说明：
+1. 时间还不够（继续等待）
+2. 查询时间范围不对（尝试 `xray-monitor query 15`）
+3. 服务未正常工作（查看 `xray-monitor status`）
+
+---
+
+### 📦 手动安装（简单版）
+
+如果只需要临时监控，不需要数据持久化：
+
+```bash
+# 1. 下载脚本
+curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-simple.sh -o xray-monitor-install-simple.sh
+
+# 2. 赋予执行权限
+chmod +x xray-monitor-install-simple.sh
+
+# 3. 运行安装
+bash xray-monitor-install-simple.sh
+
+# 4. 立即使用
+xray-monitor status
+xray-monitor 300  # 监控5分钟
+```
+
+**简单版特点：**
+- ✅ 无需数据库
+- ✅ 即用即走
+- ❌ 数据不保存
+- ❌ 无法查询历史
+
+---
+
+### ⚙️ 安装时的常见选项
+
+#### 1. 多个端口时的选择
+
+如果系统有多个X-Ray端口：
+
+```
+检测到 3 个公网端口:
+  [1] 端口 443 (监听: 0.0.0.0:443)
+  [2] 端口 8443 (监听: *:8443)
+  [3] 端口 48056 (监听: *:48056)
+  已忽略 2 个本地端口
+
+请选择要监控的端口序号 [1-3]: 3
+✓ 已选择端口: 48056
+```
+
+**选择建议：** 选择你实际提供给用户使用的端口。
+
+#### 2. 手动指定端口
+
+如果自动检测失败：
+
+```
+未自动检测到 X-Ray 端口，请手动输入:
+请输入 X-Ray 监听端口 (默认 32252): 48056
+✓ 将监控端口: 48056
+```
+
+#### 3. 查看已安装版本
+
+```bash
+xray-monitor help | head -3
+```
+
+应该显示：
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  X-Ray 流量监控工具 v2.3 - 数据库版
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+### 🔄 重新安装或更新
+
+如果需要重新安装（例如更新到新版本）：
+
+```bash
+# 1. 停止服务（保留数据）
+xray-monitor stop
+
+# 2. 重新运行安装脚本
+bash <(curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh)
+
+# 3. 测试
+xray-monitor test
+
+# 4. 启动服务
+xray-monitor start
+```
+
+**注意：** 重新安装**不会删除**数据库，历史数据会保留！
+
+---
+
+### ✅ 安装成功检查清单
+
+安装完成后，确认以下几点：
+
+- [ ] 运行 `xray-monitor test` 能正确显示IP（不是0）
+- [ ] 运行 `xray-monitor start` 服务启动成功
+- [ ] 运行 `xray-monitor status` 显示"运行中"
+- [ ] 运行 `xray-monitor realtime` 能看到实时连接
+- [ ] 等待5-10分钟后 `xray-monitor query 10` 有数据
+
+如果以上任何一项失败，请查看[故障排查](#故障排查)章节。
+
+---
+
+## 使用教程
+
+### 简单版使用
+
+#### 1. 查看当前连接状态
+
+```bash
+xray-monitor status
+```
+
+**输出示例：**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  当前连接状态 (端口: 48056)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+总连接数: 268
+唯一IP数: 45
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+#### 2. 查看连接数Top 10
+
+```bash
+xray-monitor top 10
+```
+
+**输出示例：**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  连接数最多的 10 个IP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 1. 192.168.1.100      15 个连接
+ 2. 192.168.1.101      12 个连接
+ 3. 192.168.1.102       8 个连接
+...
+```
+
+#### 3. 监控流量（5分钟）
+
+```bash
+xray-monitor monitor 300
+# 或简写
+xray-monitor 300
+```
+
+**输出示例：**
+```
+开始监控端口 48056 的流量...
+✓ 发现 45 个唯一IP
+监控中，预计 300 秒...
+⏱  剩余: 5 分 0 秒
+⏱  剩余: 4 分 0 秒
+...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  IP流量统计 (监控时长: 300秒 / 5分钟)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+序号 IP地址              入站(MB)        出站(MB)        总计(MB)
+--------------------------------------------------------------------
+1    112.81.37.98           244.76            0.00          244.76
+2    117.12.134.134          81.64            0.00           81.64
+...
+====================================================================
+总计                                                     3580.23 MB
+                                                            3.50 GB
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ 监控完成
+```
+
+**注意：** 简单版的监控数据**不会保存**，监控结束后数据消失！
+
+#### 4. 常用监控时长
+
+```bash
+xray-monitor 300     # 5分钟
+xray-monitor 600     # 10分钟
+xray-monitor 1800    # 30分钟
+xray-monitor 3600    # 1小时
+```
+
+---
+
+### 数据库版使用
+
+#### 1. 启动监控服务（首次使用必须）
+
+```bash
+xray-monitor start
+```
+
+**输出：**
+```
+✓ 监控服务已启动 (PID: 12345)
+  采集间隔: 5分钟
+  数据库: /var/lib/xray-monitor/traffic.db
+  日志: /var/log/xray-monitor.log
+```
+
+服务启动后会自动每5分钟采集一次流量数据。
+
+#### 2. 查看服务状态
+
+```bash
+xray-monitor status
+```
+
+**输出示例：**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  监控服务状态
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+状态: 运行中
+PID: 12345
+端口: 48056
+采集间隔: 5分钟
+数据记录: 1234 条
+唯一IP: 89 个
+最早记录: 2025-11-17 10:00:00
+最新记录: 2025-11-17 15:30:00
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+#### 3. 测试连接（诊断工具）
+
+```bash
+xray-monitor test
+```
+
+**输出示例：**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  连接测试 (端口: 48056)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+总连接数: 260
+
+原始连接数据（前5行）:
+Recv-Q Send-Q Local Address:Port    Peer Address:Port
+0      0      [::ffff:x.x.x.x]:48056 [::ffff:1.2.3.4]:12345
+...
+
+提取的IP地址（前10个）:
+  • 1.2.3.4
+  • 5.6.7.8
+  ...
+
+唯一IP数: 45
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+#### 4. 查询流量（等待5-10分钟后）
+
+##### 基本查询
+
+```bash
+# 查询最近1小时（前10名）
+xray-monitor query 60 10
+
+# 查询最近30分钟（前10名）
+xray-monitor query 30
+
+# 查询最近24小时（前20名）
+xray-monitor query 1440 20
+```
+
+**输出示例：**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  流量统计 - 最近 60 分钟 (Top 10)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1   1.2.3.4          125.45 MB     234.67 MB     360.12 MB
+2   5.6.7.8           89.23 MB     156.78 MB     246.01 MB
+...
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+总入站: 1234.56 MB  |  总出站: 2345.67 MB
+总流量: 3580.23 MB (3.50 GB)  |  唯一IP: 45
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+##### 常用查询时长
+
+| 时间段 | 分钟数 | 命令 |
+|--------|--------|------|
+| 10分钟 | 10 | `xray-monitor query 10` |
+| 30分钟 | 30 | `xray-monitor query 30` |
+| 1小时 | 60 | `xray-monitor query 60` |
+| 6小时 | 360 | `xray-monitor query 360` |
+| 12小时 | 720 | `xray-monitor query 720` |
+| 24小时 | 1440 | `xray-monitor query 1440` |
+| 48小时 | 2880 | `xray-monitor query 2880` |
+| 7天 | 10080 | `xray-monitor query 10080` |
+| 30天 | 43200 | `xray-monitor query 43200` |
+
+#### 5. 实时监控
+
+```bash
+xray-monitor realtime
+```
+
+**功能：**
+- 每3秒刷新一次
+- 显示当前总连接数
+- 显示唯一IP数
+- 显示连接数Top 10
+- 按 `Ctrl+C` 退出
+
+**输出示例：**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  实时连接状态 (端口: 48056)
+  2025-11-17 15:30:45
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+总连接数: 260  |  唯一IP: 45
+
+连接数排名 (Top 10):
+  1. 1.2.3.4        15 个连接
+  2. 5.6.7.8        12 个连接
+  ...
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(每3秒自动刷新)
+```
+
+#### 6. 服务管理
+
+```bash
+# 停止服务（数据保留）
+xray-monitor stop
+
+# 重启服务
+xray-monitor restart
+
+# 查看服务状态
+xray-monitor status
+```
+
+#### 7. 清空数据库
+
+```bash
+xray-monitor cleardb
+```
+
+**警告：** 此操作会删除所有历史数据，不可恢复！
+
+---
+
+## 命令参考
+
+### 简单版命令
+
+| 命令 | 说明 | 示例 |
+|------|------|------|
+| `xray-monitor status` | 查看当前连接状态 | - |
+| `xray-monitor top [N]` | 显示连接数最多的N个IP | `xray-monitor top 20` |
+| `xray-monitor monitor <秒>` | 监控指定时长的流量 | `xray-monitor monitor 300` |
+| `xray-monitor <秒>` | 快捷监控（同monitor） | `xray-monitor 300` |
+| `xray-monitor help` | 显示帮助信息 | - |
+
+### 数据库版命令
+
+| 命令 | 说明 | 示例 |
+|------|------|------|
+| **服务管理** |
+| `xray-monitor start` | 启动后台监控服务 | - |
+| `xray-monitor stop` | 停止监控服务 | - |
+| `xray-monitor restart` | 重启监控服务 | - |
+| `xray-monitor status` | 查看服务状态 | - |
+| **流量查询** |
+| `xray-monitor query <分钟> [Top N]` | 查询指定时间段流量 | `xray-monitor query 60 10` |
+| **实时监控** |
+| `xray-monitor realtime` | 实时显示连接状态 | - |
+| **数据管理** |
+| `xray-monitor cleardb` | 清空数据库 | - |
+| **调试工具** |
+| `xray-monitor test` | 测试连接检测 | - |
+| **其他** |
+| `xray-monitor help` | 显示帮助信息 | - |
+
+---
+
+## 常见问题
+
+### Q1: 显示"唯一IP数: 0"怎么办？
+
+**原因：** 脚本版本太旧或IP提取逻辑有问题。
+
+**解决方法：**
+```bash
+# 1. 确认使用最新版本
+xray-monitor help | head -3
+# 应显示 v2.3 或更高
+
+# 2. 如果版本过旧，重新安装
+bash xray-monitor-install-db.sh
+
+# 3. 测试验证
+xray-monitor test
+# 应该能看到IP列表
+```
+
+### Q2: 数据库版查询没有数据？
+
+**原因：** 服务刚启动，还没有采集数据。
+
+**解决方法：**
+```bash
+# 1. 确认服务已启动
+xray-monitor status
+
+# 2. 等待5-10分钟后再查询
+xray-monitor query 10
+
+# 3. 查看日志
+tail -50 /var/log/xray-monitor.log
+```
+
+### Q3: 端口检测不到或错误？
+
+**原因：** X-Ray 未运行或使用非标准端口。
+
+**解决方法：**
+```bash
+# 1. 确认 X-Ray 正在运行
+systemctl status xray
+
+# 2. 查看实际端口
+ss -tlnp | grep xray
+
+# 3. 重新安装时手动输入端口
+bash xray-monitor-install-db.sh
+# 在提示时输入正确的端口号
+```
+
+### Q4: 简单版的数据能保存吗？
+
+**答案：** 不能。简单版设计为临时使用，数据不保存。
+
+**解决方法：** 如需保存历史数据，请使用数据库版。
+
+### Q5: 数据库版占用多少空间？
+
+**答案：** 非常小。
+
+- 每条记录约 50 字节
+- 每5分钟采集一次
+- 每天约 17KB
+- 一个月约 500KB
+
+### Q6: 如何导出数据？
+
+```bash
+# 导出为 CSV
+sqlite3 -header -csv /var/lib/xray-monitor/traffic.db \
+  "SELECT datetime(timestamp, 'unixepoch', 'localtime') as time,
+   ip_address, bytes_in/1048576.0 as MB_in, bytes_out/1048576.0 as MB_out
+   FROM traffic_records ORDER BY timestamp DESC LIMIT 1000;" > traffic.csv
+```
+
+### Q7: 可以同时安装两个版本吗？
+
+**答案：** 不可以。两个版本会覆盖同一个 `xray-monitor` 命令。
+
+**建议：** 选择一个版本使用。
+
+---
+
+## 最佳实践
+
+### 1. 数据库版使用建议
+
+#### 开机自启动
+
+```bash
+# 创建 systemd 服务
+cat > /etc/systemd/system/xray-monitor.service << EOF
+[Unit]
+Description=X-Ray Traffic Monitor
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/local/bin/xray-monitor start
+ExecStop=/usr/local/bin/xray-monitor stop
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# 启用并启动
+systemctl daemon-reload
+systemctl enable xray-monitor
+systemctl start xray-monitor
+```
+
+#### 定期清理旧数据
+
+```bash
+# 添加 cron 任务（每月1号清理30天前数据）
+crontab -e
+
+# 添加以下行
+0 3 1 * * sqlite3 /var/lib/xray-monitor/traffic.db "DELETE FROM traffic_records WHERE timestamp < strftime('%s', 'now', '-30 days'); VACUUM;"
+```
+
+#### 定时生成报表
+
+```bash
+# 每天上午9点生成昨日报告
+crontab -e
+
+# 添加以下行
+0 9 * * * /usr/local/bin/xray-monitor query 1440 30 > /root/reports/traffic-$(date +\%Y\%m\%d).txt
+```
+
+#### 数据备份
+
+```bash
+# 定期备份数据库
+cp /var/lib/xray-monitor/traffic.db ~/backup/traffic-$(date +%Y%m%d).db
+```
+
+### 2. 监控策略建议
+
+#### 日常监控
+```bash
+# 每天查看一次最近24小时的流量
+xray-monitor query 1440 20
+```
+
+#### 实时观察
+```bash
+# 发现异常时使用实时监控
+xray-monitor realtime
+```
+
+#### 定期审计
+```bash
+# 每周查看最近7天的流量
+xray-monitor query 10080 50
+```
+
+### 3. 异常流量排查
+
+```bash
+# 1. 查看实时连接
+xray-monitor realtime
+
+# 2. 查看最近1小时流量Top 30
+xray-monitor query 60 30
+
+# 3. 发现异常IP后，可以封禁
+iptables -A INPUT -s <异常IP> -j DROP
+```
+
+---
+
+## 故障排查
+
+### 1. 服务无法启动
+
+**检查步骤：**
+```bash
+# 1. 查看是否已在运行
+xray-monitor status
+
+# 2. 查看日志
+tail -50 /var/log/xray-monitor.log
+
+# 3. 手动测试采集
+xray-monitor test
+
+# 4. 重启服务
+xray-monitor stop
+xray-monitor start
+```
+
+### 2. 数据库损坏
+
+**修复方法：**
+```bash
+# 1. 备份数据库
+cp /var/lib/xray-monitor/traffic.db /var/lib/xray-monitor/traffic.db.bak
+
+# 2. 检查数据库完整性
+sqlite3 /var/lib/xray-monitor/traffic.db "PRAGMA integrity_check;"
+
+# 3. 如果损坏，重建数据库
+xray-monitor stop
+rm /var/lib/xray-monitor/traffic.db
+xray-monitor start
+```
+
+### 3. IP提取失败
+
+**诊断方法：**
+```bash
+# 1. 运行测试
+xray-monitor test
+
+# 2. 手动测试 ss 命令
+ss -tn state established "( dport = :48056 or sport = :48056 )" | head -10
+
+# 3. 查看列格式
+ss -tn state established "( dport = :48056 or sport = :48056 )" | \
+  tail -n +2 | head -1 | \
+  awk '{for(i=1;i<=NF;i++) printf "列%d: %s\n", i, $i}'
+```
+
+### 4. 权限问题
+
+```bash
+# 确保脚本有执行权限
+chmod +x /usr/local/bin/xray-monitor
+
+# 确保以 root 运行
+sudo xray-monitor status
+```
+
+### 5. 查看详细日志
+
+```bash
+# 实时查看日志
+tail -f /var/log/xray-monitor.log
+
+# 查看最近100行
+tail -100 /var/log/xray-monitor.log
+
+# 查看错误信息
+grep -i error /var/log/xray-monitor.log
+```
+
+---
+
+## 卸载
+
+### 简单版卸载
+
+```bash
+rm -f /usr/local/bin/xray-monitor
+```
+
+### 数据库版卸载
+
+```bash
+# 使用卸载脚本（会询问是否删除数据库）
+xray-monitor-uninstall
+
+# 或手动卸载
+xray-monitor stop
+rm -f /usr/local/bin/xray-monitor
+rm -f /usr/local/bin/xray-monitor-uninstall
+rm -rf /var/lib/xray-monitor  # 删除数据库
+rm -f /var/log/xray-monitor.log
+rm -f /var/run/xray-monitor.pid
+```
+
+---
+
+## 技术说明
+
+### 工作原理
+
+#### 流量采集
+1. 使用 `ss` 命令获取活跃连接的IP列表
+2. 使用 `iptables` 为每个IP创建流量统计规则
+3. 等待指定时间后读取 `iptables` 统计数据
+4. 计算每个IP的入站/出站/总流量
+
+#### 数据存储（数据库版）
+- 使用 SQLite3 轻量级数据库
+- 表结构：`ip_address`, `bytes_in`, `bytes_out`, `bytes_total`, `timestamp`
+- 索引：IP地址、时间戳、IP+时间组合
+
+#### 智能端口检测
+- 扫描所有 xray 进程监听的端口
+- 自动识别公网端口（监听 `0.0.0.0` 或 `*`）
+- 忽略本地端口（监听 `127.0.0.1`）
+- 支持IPv6映射格式
+
+### 依赖包
+
+- **iptables**: 流量统计
+- **iproute2**: 提供 ss 命令
+- **gawk**: 数据处理
+- **sqlite3**: 数据库（仅数据库版）
+- **bc**: 计算（仅数据库版）
+
+### 文件位置
+
+| 文件 | 位置 | 说明 |
+|------|------|------|
+| 主脚本 | `/usr/local/bin/xray-monitor` | 可执行命令 |
+| 卸载脚本 | `/usr/local/bin/xray-monitor-uninstall` | 卸载工具（数据库版） |
+| 数据库 | `/var/lib/xray-monitor/traffic.db` | SQLite数据库（数据库版） |
+| 日志 | `/var/log/xray-monitor.log` | 服务日志（数据库版） |
+| PID文件 | `/var/run/xray-monitor.pid` | 进程ID（数据库版） |
+
+---
+
+## 更新日志
+
+### v2.3 (2025-11-17) - 当前版本
+- ✅ 修复列号错误（对端IP在第4列）
+- ✅ 完善IPv6映射格式支持
+- ✅ 优化IP提取逻辑
+- ✅ 首个完全可用的版本
+
+### v2.2 (2025-11-17)
+- ⚠️ 尝试支持IPv6映射格式（列号错误）
+- ✅ 使用 sed 处理 `[::ffff:x.x.x.x]:port` 格式
+
+### v2.1 (2025-11-17)
+- ⚠️ 新增 test 命令
+- ⚠️ 尝试优化IP提取（失败）
+
+### v2.0 (2025-11-17)
+- ✅ 首个数据库版本
+- ✅ 自动采集功能
+- ⚠️ IP提取存在问题
+
+### v1.0 (简单版)
+- ✅ 基础流量监控功能
+- ✅ 实时连接状态
+- ✅ 流量排名
+
+---
+
+## 支持与反馈
+
+### 获取帮助
+
+```bash
+# 查看帮助信息
+xray-monitor help
+
+# 测试连接
+xray-monitor test
+
+# 查看服务状态
+xray-monitor status
+
+# 查看日志
+tail -50 /var/log/xray-monitor.log
+```
+
+### 常用诊断命令
+
+```bash
+# 检查X-Ray是否运行
+systemctl status xray
+
+# 查看X-Ray端口
+ss -tlnp | grep xray
+
+# 查看当前连接
+ss -tn | grep :48056 | wc -l
+
+# 测试IP提取
+ss -tn state established "( dport = :48056 or sport = :48056 )" | \
+  tail -n +2 | awk '{print $4}' | \
+  sed 's/\[::ffff://g;s/\]:[0-9]*$//g' | \
+  grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | head -10
+```
+
+---
+
+## 许可证
+
+本工具为开源软件，可自由使用和修改。
+
+## 免责声明
+
+- 本工具仅用于合法的流量监控目的
+- 使用本工具产生的任何后果由使用者承担
+- 请遵守当地法律法规
+
+---
+
+## 总结
+
+### 🚀 快速开始（数据库版）⭐ 推荐
+
+#### 一键安装命令
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh)
+```
+
+#### 完整流程
+
+```bash
+# 1. 一键安装
+bash <(curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh)
+
+# 2. 测试连接
+xray-monitor test
+
+# 3. 启动服务
+xray-monitor start
+
+# 4. 查看状态
+xray-monitor status
+
+# 5. 查询流量（等待5-10分钟）
+xray-monitor query 10
+```
+
+### 快速开始（简单版）
+
+```bash
+# 1. 下载安装
+curl -sL https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-simple.sh | bash
+
+# 2. 监控5分钟
+xray-monitor 300
+```
+
+---
+
+### 📖 相关链接
+
+- **GitHub 仓库**: https://github.com/huanshenweb/xrayCheck
+- **安装脚本**: https://raw.githubusercontent.com/huanshenweb/xrayCheck/refs/heads/main/xray-monitor-install-db.sh
+
+---
+
+**祝使用愉快！** 🚀
+
